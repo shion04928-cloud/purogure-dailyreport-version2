@@ -323,8 +323,8 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
       onClick={onClick}
       className={`px-4 py-2.5 rounded-full text-base font-semibold transition-all duration-100 select-none border-2 ${
         active
-          ? 'bg-blue-500 text-white border-blue-500 shadow-md'
-          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50 active:bg-blue-100'
+          ? 'bg-gray-900 text-white border-gray-900'
+          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500 active:bg-gray-50'
       }`}
     >
       {label}
@@ -341,8 +341,8 @@ function RadioChip({ label, value, current, onChange }: {
       onClick={() => onChange(active ? '' : value)}
       className={`px-4 py-2.5 rounded-full text-base font-semibold transition-all duration-100 select-none border-2 ${
         active
-          ? 'bg-blue-500 text-white border-blue-500 shadow-md'
-          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50 active:bg-blue-100'
+          ? 'bg-gray-900 text-white border-gray-900'
+          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500 active:bg-gray-50'
       }`}
     >
       {label}
@@ -353,16 +353,17 @@ function RadioChip({ label, value, current, onChange }: {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-sm font-bold text-gray-400 mb-2 tracking-wide">{title}</p>
+      <p className="text-sm font-bold text-gray-400 mb-2">{title}</p>
       <div className="flex flex-wrap gap-2.5">{children}</div>
     </div>
   );
 }
 
-function SectionBar({ label, color }: { label: string; color: string }) {
+function SectionLabel({ label }: { label: string }) {
   return (
-    <div className={`rounded-xl px-4 py-2.5 mb-4 ${color}`}>
-      <h2 className="text-base font-bold text-white">{label}</h2>
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-1 h-5 bg-gray-800 rounded-full" />
+      <h2 className="text-base font-bold text-gray-800">{label}</h2>
     </div>
   );
 }
@@ -383,14 +384,11 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <main className="min-h-screen bg-blue-50 flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-lg p-10 w-full max-w-sm border-t-8 border-blue-500">
+    <main className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#FFE2E2' }}>
+      <div className="bg-white rounded-3xl shadow-md p-10 w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
-            <span className="text-3xl">📋</span>
-          </div>
-          <h1 className="text-2xl font-bold text-blue-700">日報入力</h1>
-          <p className="text-gray-400 mt-1">パスワードを入力してください</p>
+          <h1 className="text-2xl font-bold text-gray-900">日報入力</h1>
+          <p className="text-gray-400 mt-1 text-sm">パスワードを入力してください</p>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
@@ -399,17 +397,15 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             onChange={e => setPw(e.target.value)}
             placeholder="パスワード"
             autoFocus
-            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-blue-400 transition-colors text-center tracking-widest"
+            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-gray-400 transition-colors text-center tracking-widest"
           />
           {error && (
-            <p className="text-red-500 text-sm text-center font-medium">
-              パスワードが違います。もう一度お試しください。
-            </p>
+            <p className="text-red-500 text-sm text-center">パスワードが違います</p>
           )}
           <button
             type="submit"
             disabled={pw.length === 0}
-            className="bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 disabled:bg-gray-200 disabled:text-gray-400 text-gray-900 font-bold py-4 rounded-xl text-xl transition-all duration-100 shadow-sm"
+            className="bg-gray-900 hover:bg-gray-700 active:bg-black disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-4 rounded-xl text-xl transition-all duration-100"
           >
             ログイン
           </button>
@@ -476,16 +472,15 @@ export default function DailyReportPage() {
   if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
 
   return (
-    <main className="min-h-screen bg-blue-50 px-3 py-6">
+    <main className="min-h-screen px-3 py-6" style={{ backgroundColor: '#FFE2E2' }}>
 
       {/* ヘッダー */}
       <div className="flex items-center justify-between max-w-4xl mx-auto mb-5">
-        <h1 className="text-2xl font-bold text-blue-700">日報入力</h1>
+        <h1 className="text-2xl font-bold text-gray-900">日報入力</h1>
         <Link
           href="/help"
-          className="flex items-center gap-1.5 bg-white border-2 border-blue-200 text-blue-600 font-bold px-4 py-2 rounded-xl text-sm hover:bg-blue-50 transition-all shadow-sm"
+          className="bg-white border border-gray-300 text-gray-600 font-medium px-4 py-2 rounded-xl text-sm hover:bg-gray-50 transition-all"
         >
-          <span className="text-lg">❓</span>
           使い方
         </Link>
       </div>
@@ -497,7 +492,7 @@ export default function DailyReportPage() {
 
           {/* ① 入室 */}
           <div className="bg-white rounded-2xl shadow-sm p-5">
-            <SectionBar label="① 入室" color="bg-blue-600" />
+            <SectionLabel label="① 入室" />
             <div className="flex flex-wrap gap-2.5 mb-4">
               <Chip label="挨拶" active={form.aisatsu} onClick={() => toggle('aisatsu')} />
               <Chip label="健康管理" active={form.healthManagement} onClick={() => toggle('healthManagement')} />
@@ -507,32 +502,30 @@ export default function DailyReportPage() {
               onChange={e => setForm(prev => ({ ...prev, userState: e.target.value }))}
               placeholder="ご本人の様子（例：「よく眠れた」と笑顔でお話しされる）"
               rows={2}
-              className="w-full text-base border-2 border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-blue-300 text-gray-700 placeholder-gray-300"
+              className="w-full text-base border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-gray-400 text-gray-700 placeholder-gray-300"
             />
           </div>
 
           {/* ② 身体介護 */}
           <div className="bg-white rounded-2xl shadow-sm p-5">
-            <SectionBar label="② 身体介護" color="bg-blue-500" />
+            <SectionLabel label="② 身体介護" />
             <div className="flex flex-col gap-5">
               <Group title="排泄">
                 <Chip label="トイレ介助" active={form.toiletAssist} onClick={() => toggle('toiletAssist')} />
                 <Chip label="トイレ誘導" active={form.toiletGuide}  onClick={() => toggle('toiletGuide')} />
               </Group>
-              <Group title="清拭（どちらか1つ）">
+              <Group title="清拭">
                 <RadioChip label="全身清拭" value="全身清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
                 <RadioChip label="部分清拭" value="部分清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
               </Group>
-              <Group title="入浴（どれか1つ）">
+              <Group title="入浴">
                 <RadioChip label="一般浴"    value="一般浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
                 <RadioChip label="シャワー浴" value="シャワー浴" current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
-                <RadioChip label="機械浴"    value="機械浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
-                <Chip label="洗髪" active={form.hairWash} onClick={() => toggle('hairWash')} />
               </Group>
               <Group title="整容">
-                <Chip label="洗面"   active={form.facialCare}  onClick={() => toggle('facialCare')} />
-                <Chip label="口腔ケア" active={form.oralCare}  onClick={() => toggle('oralCare')} />
-                <Chip label="更衣介助" active={form.dressing}  onClick={() => toggle('dressing')} />
+                <Chip label="洗面"    active={form.facialCare}  onClick={() => toggle('facialCare')} />
+                <Chip label="口腔ケア" active={form.oralCare}   onClick={() => toggle('oralCare')} />
+                <Chip label="更衣介助" active={form.dressing}   onClick={() => toggle('dressing')} />
               </Group>
               <Group title="移動・起床就寝">
                 <Chip label="移動介助" active={form.movementAssist} onClick={() => toggle('movementAssist')} />
@@ -540,17 +533,17 @@ export default function DailyReportPage() {
                 <Chip label="就寝介助" active={form.sleepAssist}    onClick={() => toggle('sleepAssist')} />
               </Group>
               <Group title="その他">
-                <Chip label="服薬確認"  active={form.medicationCheck}  onClick={() => toggle('medicationCheck')} />
-                <Chip label="安全確保"  active={form.safeguard}        onClick={() => toggle('safeguard')} />
+                <Chip label="服薬確認" active={form.medicationCheck} onClick={() => toggle('medicationCheck')} />
+                <Chip label="安全確保" active={form.safeguard}       onClick={() => toggle('safeguard')} />
               </Group>
             </div>
           </div>
 
           {/* ③ 生活援助 */}
           <div className="bg-white rounded-2xl shadow-sm p-5">
-            <SectionBar label="③ 生活援助" color="bg-emerald-600" />
+            <SectionLabel label="③ 生活援助" />
             <div className="flex flex-col gap-5">
-              <Group title="清掃（複数選べます）">
+              <Group title="清掃">
                 <Chip label="居室"    active={form.cleanRoom}    onClick={() => toggle('cleanRoom')} />
                 <Chip label="トイレ"  active={form.cleanToilet}  onClick={() => toggle('cleanToilet')} />
                 <Chip label="ベッド"  active={form.cleanBed}     onClick={() => toggle('cleanBed')} />
@@ -570,7 +563,7 @@ export default function DailyReportPage() {
 
           {/* ④ 退室確認 */}
           <div className="bg-white rounded-2xl shadow-sm p-5">
-            <SectionBar label="④ 退室確認" color="bg-orange-500" />
+            <SectionLabel label="④ 退室確認" />
             <div className="flex flex-wrap gap-2.5 mb-4">
               <Chip label="火元"   active={form.fireCheck}     onClick={() => toggle('fireCheck')} />
               <Chip label="電気"   active={form.electricCheck} onClick={() => toggle('electricCheck')} />
@@ -582,7 +575,7 @@ export default function DailyReportPage() {
               onChange={e => setForm(prev => ({ ...prev, closingNote: e.target.value }))}
               placeholder="退室時の様子・締め（例：「ありがとう」とお言葉をいただき退出）"
               rows={2}
-              className="w-full text-base border-2 border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-blue-300 text-gray-700 placeholder-gray-300"
+              className="w-full text-base border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-gray-400 text-gray-700 placeholder-gray-300"
             />
           </div>
 
@@ -590,13 +583,13 @@ export default function DailyReportPage() {
           <div className="flex flex-col gap-3">
             <button
               onClick={handleCopy}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-gray-900 font-bold py-5 rounded-2xl text-xl transition-all duration-100 shadow-md"
+              className="w-full bg-gray-900 hover:bg-gray-700 active:bg-black text-white font-bold py-5 rounded-2xl text-xl transition-all duration-100 shadow-sm"
             >
               レポートをコピー
             </button>
             <button
               onClick={() => { setForm(initial); setCopiedText(''); }}
-              className="w-full bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-400 font-medium py-3 rounded-xl text-base transition-all duration-100"
+              className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-400 font-medium py-3 rounded-xl text-sm transition-all duration-100"
             >
               リセット（全部クリア）
             </button>
@@ -604,8 +597,8 @@ export default function DailyReportPage() {
 
           {/* コピーした文章プレビュー */}
           {copiedText && (
-            <div className="bg-blue-50 border-2 border-blue-300 rounded-2xl p-4">
-              <p className="text-sm font-bold text-blue-600 mb-2">コピーした内容</p>
+            <div className="bg-white border border-gray-200 rounded-2xl p-4">
+              <p className="text-xs font-bold text-gray-400 mb-2">コピーした内容</p>
               <p className="text-base text-gray-800 whitespace-pre-line leading-relaxed">{copiedText}</p>
             </div>
           )}
@@ -614,13 +607,13 @@ export default function DailyReportPage() {
         {/* ── 右：スプシ用コード ── */}
         <div className="w-36 shrink-0">
           <div className="bg-white rounded-2xl shadow-sm p-3 sticky top-4">
-            <p className="text-xs font-bold text-gray-400 mb-2 tracking-wide text-center">スプシ用コード</p>
+            <p className="text-xs font-bold text-gray-500 mb-2 text-center">スプシ用コード</p>
             <div className="flex flex-col gap-1.5">
               {SHEET_CODES.map(({ code, hint }) => (
                 <button key={code} onClick={() => handleCodeCopy(code)}
-                  className="text-left bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-100 rounded-lg px-2 py-1.5 transition-all">
-                  <span className="block text-xs text-blue-300 leading-none mb-0.5">{hint}</span>
-                  <span className="font-mono text-xs font-bold text-blue-700 break-all">{code}</span>
+                  className="text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg px-2 py-1.5 transition-all">
+                  <span className="block text-xs text-gray-400 leading-none mb-0.5">{hint}</span>
+                  <span className="font-mono text-xs font-bold text-gray-700 break-all">{code}</span>
                 </button>
               ))}
             </div>
