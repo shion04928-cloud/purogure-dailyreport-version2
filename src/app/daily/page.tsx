@@ -359,7 +359,52 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [pw, setPw] = useState('');
+  const [error, setError] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pw === process.env.NEXT_PUBLIC_APP_PASSWORD) {
+      sessionStorage.setItem('auth', '1');
+      onLogin();
+    } else {
+      setError(true);
+      setPw('');
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <div className="bg-white rounded-3xl shadow-md p-10 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-gray-700 mb-2 text-center">日報入力</h1>
+        <p className="text-sm text-gray-400 mb-8 text-center">パスワードを入力してください</p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input
+            type="password"
+            value={pw}
+            onChange={e => setPw(e.target.value)}
+            placeholder="パスワード"
+            autoFocus
+            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-blue-400 transition-colors"
+          />
+          {error && <p className="text-red-500 text-sm text-center">パスワードが違います</p>}
+          <button
+            type="submit"
+            disabled={pw.length === 0}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl text-lg transition-all duration-100"
+          >
+            ログイン
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}
+
 export default function DailyReportPage() {
+  const [authed, setAuthed] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [form, setForm] = useState<FormState>(initial);
   const [templateMap, setTemplateMap] = useState<Map<string, string[]>>(new Map());
   const [copiedText, setCopiedText] = useState('');
@@ -367,6 +412,8 @@ export default function DailyReportPage() {
   const [toastMsg, setToastMsg] = useState('');
 
   useEffect(() => {
+    if (sessionStorage.getItem('auth') === '1') setAuthed(true);
+    setAuthChecked(true);
     fetch('/api/templates')
       .then(r => r.json())
       .then(data => { if (data.categories) setTemplateMap(buildMap(data.categories)); })
@@ -407,6 +454,9 @@ export default function DailyReportPage() {
     await clipCopy(code);
     showToast(`✓ "${code}" をコピー`);
   }, [clipCopy, showToast]);
+
+  if (!authChecked) return null;
+  if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
 
   return (
     <main className="min-h-screen bg-gray-100 px-3 py-6">
