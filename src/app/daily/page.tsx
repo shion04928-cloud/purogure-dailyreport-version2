@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import Link from 'next/link';
 
 type Category = { name: string; templates: string[] };
 
@@ -130,14 +131,12 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
 
   const add = (text: string) => { segs.push(prefix + text); prefix = ''; };
 
-  // 開口部（挨拶・様子）の後に「その後、」でつなぐ
   const addC = (text: string) => {
     const conn = (firstCare && segs.length > 0) ? oneOf(['その後、', '続いて、']) : '';
     firstCare = false;
     add(conn + text);
   };
 
-  // 「しました」→「し」（チェーン接続用）
   const toConn = (s: string) =>
     s.replace(/しました$/, 'し').replace(/ました$/, '').replace(/済みです$/, '済ませ');
 
@@ -158,7 +157,7 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
 
   if (f.userState.trim()) add(f.userState.trim());
 
-  // ── 身体介護（全アイテムを収集して最後に1文にまとめる）──
+  // ── 身体介護 ──
   const body: string[] = [];
   const bd = (s: string) => body.push(s);
 
@@ -245,14 +244,13 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   if (f.sleepAssist) bd(pick(map, '就寝介助', '就寝のお手伝いをしました'));
   if (f.safeguard)   bd(pick(map, '安全確保', '室内の安全確認をしました'));
 
-  // 身体介護を1文にまとめてチェーン
   if (body.length >= 2) {
     addC([...body.slice(0, -1).map(toConn), body[body.length - 1]].join('、'));
   } else if (body.length === 1) {
     addC(body[0]);
   }
 
-  // ── 生活援助（清掃・ゴミ・洗濯を「〜し、〜しました」でつなぐ）──
+  // ── 生活援助 ──
   type HK = { c: string; f: string };
   const hk: HK[] = [];
   const rooms: string[] = [];
@@ -272,7 +270,7 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   if (hk.length >= 2) addC([...hk.slice(0, -1).map(h => h.c), hk[hk.length - 1].f].join('、'));
   else if (hk.length === 1) addC(hk[0].f);
 
-  // ── 食事（調理・配下膳・服薬確認を組み合わせ）──
+  // ── 食事 ──
   if (f.cooking && f.serving && f.medicationCheck) {
     addC(oneOf([
       '調理・配膳し、食後に下膳と服薬確認を済ませました',
@@ -296,7 +294,7 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   if (f.servingOnly) addC(pick(map, '配膳のみ', '配膳をしました'));
   if (f.shopping)    addC(pick(map, '買物',     '日用品の買い物をしました'));
 
-  // ── 退室（服薬 + 退室確認をつなぐ）──
+  // ── 退室 ──
   const exitItems: string[] = [];
   if (f.fireCheck)     exitItems.push('火元');
   if (f.electricCheck) exitItems.push('電気');
@@ -317,14 +315,16 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   return segs.length > 0 ? segs.join('。') + '。' : '';
 }
 
+// ── UIコンポーネント ──
+
 function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-100 select-none ${
+      className={`px-4 py-2.5 rounded-full text-base font-semibold transition-all duration-100 select-none border-2 ${
         active
-          ? 'bg-blue-500 text-white shadow-sm'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:bg-gray-300'
+          ? 'bg-blue-500 text-white border-blue-500 shadow-md'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50 active:bg-blue-100'
       }`}
     >
       {label}
@@ -339,10 +339,10 @@ function RadioChip({ label, value, current, onChange }: {
   return (
     <button
       onClick={() => onChange(active ? '' : value)}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-100 select-none ${
+      className={`px-4 py-2.5 rounded-full text-base font-semibold transition-all duration-100 select-none border-2 ${
         active
-          ? 'bg-indigo-500 text-white shadow-sm'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:bg-gray-300'
+          ? 'bg-blue-500 text-white border-blue-500 shadow-md'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:bg-blue-50 active:bg-blue-100'
       }`}
     >
       {label}
@@ -353,8 +353,16 @@ function RadioChip({ label, value, current, onChange }: {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-xs text-gray-400 font-semibold mb-2">{title}</p>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <p className="text-sm font-bold text-gray-400 mb-2 tracking-wide">{title}</p>
+      <div className="flex flex-wrap gap-2.5">{children}</div>
+    </div>
+  );
+}
+
+function SectionBar({ label, color }: { label: string; color: string }) {
+  return (
+    <div className={`rounded-xl px-4 py-2.5 mb-4 ${color}`}>
+      <h2 className="text-base font-bold text-white">{label}</h2>
     </div>
   );
 }
@@ -375,10 +383,15 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-md p-10 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-700 mb-2 text-center">日報入力</h1>
-        <p className="text-sm text-gray-400 mb-8 text-center">パスワードを入力してください</p>
+    <main className="min-h-screen bg-blue-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-3xl shadow-lg p-10 w-full max-w-sm border-t-8 border-blue-500">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+            <span className="text-3xl">📋</span>
+          </div>
+          <h1 className="text-2xl font-bold text-blue-700">日報入力</h1>
+          <p className="text-gray-400 mt-1">パスワードを入力してください</p>
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="password"
@@ -386,13 +399,17 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             onChange={e => setPw(e.target.value)}
             placeholder="パスワード"
             autoFocus
-            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-blue-400 transition-colors"
+            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-blue-400 transition-colors text-center tracking-widest"
           />
-          {error && <p className="text-red-500 text-sm text-center">パスワードが違います</p>}
+          {error && (
+            <p className="text-red-500 text-sm text-center font-medium">
+              パスワードが違います。もう一度お試しください。
+            </p>
+          )}
           <button
             type="submit"
             disabled={pw.length === 0}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl text-lg transition-all duration-100"
+            className="bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 disabled:bg-gray-200 disabled:text-gray-400 text-gray-900 font-bold py-4 rounded-xl text-xl transition-all duration-100 shadow-sm"
           >
             ログイン
           </button>
@@ -447,155 +464,163 @@ export default function DailyReportPage() {
     const text = generateReport(form, templateMap);
     await clipCopy(text);
     setCopiedText(text);
-    showToast('✓ コピーしました');
+    showToast('コピーしました！');
   }, [form, templateMap, clipCopy, showToast]);
 
   const handleCodeCopy = useCallback(async (code: string) => {
     await clipCopy(code);
-    showToast(`✓ "${code}" をコピー`);
+    showToast(`"${code}" をコピーしました`);
   }, [clipCopy, showToast]);
 
   if (!authChecked) return null;
   if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
 
   return (
-    <main className="min-h-screen bg-gray-100 px-3 py-6">
-      <h1 className="text-xl font-bold text-gray-700 text-center mb-4">日報入力</h1>
+    <main className="min-h-screen bg-blue-50 px-3 py-6">
+
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between max-w-4xl mx-auto mb-5">
+        <h1 className="text-2xl font-bold text-blue-700">日報入力</h1>
+        <Link
+          href="/help"
+          className="flex items-center gap-1.5 bg-white border-2 border-blue-200 text-blue-600 font-bold px-4 py-2 rounded-xl text-sm hover:bg-blue-50 transition-all shadow-sm"
+        >
+          <span className="text-lg">❓</span>
+          使い方
+        </Link>
+      </div>
 
       <div className="flex gap-3 max-w-4xl mx-auto items-start">
 
         {/* ── 左：フォーム ── */}
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
-          <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-5">
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
 
-            {/* 挨拶 + ご本人の様子 */}
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap gap-2">
-                <Chip label="挨拶" active={form.aisatsu} onClick={() => toggle('aisatsu')} />
-              </div>
-              <textarea
-                value={form.userState}
-                onChange={e => setForm(prev => ({ ...prev, userState: e.target.value }))}
-                placeholder="ご本人の様子（例：「よく眠れた」と笑顔でお話しされる）"
-                rows={2}
-                className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-blue-300 text-gray-700 placeholder-gray-300"
-              />
+          {/* ① 入室 */}
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <SectionBar label="① 入室" color="bg-blue-600" />
+            <div className="flex flex-wrap gap-2.5 mb-4">
+              <Chip label="挨拶" active={form.aisatsu} onClick={() => toggle('aisatsu')} />
+              <Chip label="健康管理" active={form.healthManagement} onClick={() => toggle('healthManagement')} />
             </div>
+            <textarea
+              value={form.userState}
+              onChange={e => setForm(prev => ({ ...prev, userState: e.target.value }))}
+              placeholder="ご本人の様子（例：「よく眠れた」と笑顔でお話しされる）"
+              rows={2}
+              className="w-full text-base border-2 border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-blue-300 text-gray-700 placeholder-gray-300"
+            />
+          </div>
 
-            <hr className="border-gray-100" />
-
-            {/* 身体介護 */}
-            <div>
-              <h2 className="text-sm font-bold text-blue-600 mb-3">身体介護</h2>
-              <div className="flex flex-col gap-4">
-                <Group title="排泄">
-                  <Chip label="トイレ介助" active={form.toiletAssist} onClick={() => toggle('toiletAssist')} />
-                  <Chip label="トイレ誘導" active={form.toiletGuide}  onClick={() => toggle('toiletGuide')} />
-                </Group>
-                <Group title="清拭">
-                  <RadioChip label="全身清拭" value="全身清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
-                  <RadioChip label="部分清拭" value="部分清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
-                </Group>
-                <Group title="入浴">
-                  <RadioChip label="一般浴"    value="一般浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
-                  <RadioChip label="シャワー浴" value="シャワー浴" current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
-                  <RadioChip label="機械浴"    value="機械浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
-                  <Chip label="洗髪" active={form.hairWash} onClick={() => toggle('hairWash')} />
-                </Group>
-                <Group title="整容">
-                  <Chip label="洗面"   active={form.facialCare}  onClick={() => toggle('facialCare')} />
-                  <Chip label="口腔ケア" active={form.oralCare}  onClick={() => toggle('oralCare')} />
-                  <Chip label="更衣介助" active={form.dressing}  onClick={() => toggle('dressing')} />
-                </Group>
-                <Group title="移動・起床就寝">
-                  <Chip label="移動介助" active={form.movementAssist} onClick={() => toggle('movementAssist')} />
-                  <Chip label="起床介助" active={form.wakeAssist}     onClick={() => toggle('wakeAssist')} />
-                  <Chip label="就寝介助" active={form.sleepAssist}    onClick={() => toggle('sleepAssist')} />
-                </Group>
-                <Group title="服薬・その他">
-                  <Chip label="服薬確認"  active={form.medicationCheck}  onClick={() => toggle('medicationCheck')} />
-                  <Chip label="安全確保"  active={form.safeguard}        onClick={() => toggle('safeguard')} />
-                  <Chip label="健康管理"  active={form.healthManagement} onClick={() => toggle('healthManagement')} />
-                </Group>
-              </div>
+          {/* ② 身体介護 */}
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <SectionBar label="② 身体介護" color="bg-blue-500" />
+            <div className="flex flex-col gap-5">
+              <Group title="排泄">
+                <Chip label="トイレ介助" active={form.toiletAssist} onClick={() => toggle('toiletAssist')} />
+                <Chip label="トイレ誘導" active={form.toiletGuide}  onClick={() => toggle('toiletGuide')} />
+              </Group>
+              <Group title="清拭（どちらか1つ）">
+                <RadioChip label="全身清拭" value="全身清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
+                <RadioChip label="部分清拭" value="部分清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
+              </Group>
+              <Group title="入浴（どれか1つ）">
+                <RadioChip label="一般浴"    value="一般浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
+                <RadioChip label="シャワー浴" value="シャワー浴" current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
+                <RadioChip label="機械浴"    value="機械浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
+                <Chip label="洗髪" active={form.hairWash} onClick={() => toggle('hairWash')} />
+              </Group>
+              <Group title="整容">
+                <Chip label="洗面"   active={form.facialCare}  onClick={() => toggle('facialCare')} />
+                <Chip label="口腔ケア" active={form.oralCare}  onClick={() => toggle('oralCare')} />
+                <Chip label="更衣介助" active={form.dressing}  onClick={() => toggle('dressing')} />
+              </Group>
+              <Group title="移動・起床就寝">
+                <Chip label="移動介助" active={form.movementAssist} onClick={() => toggle('movementAssist')} />
+                <Chip label="起床介助" active={form.wakeAssist}     onClick={() => toggle('wakeAssist')} />
+                <Chip label="就寝介助" active={form.sleepAssist}    onClick={() => toggle('sleepAssist')} />
+              </Group>
+              <Group title="その他">
+                <Chip label="服薬確認"  active={form.medicationCheck}  onClick={() => toggle('medicationCheck')} />
+                <Chip label="安全確保"  active={form.safeguard}        onClick={() => toggle('safeguard')} />
+              </Group>
             </div>
+          </div>
 
-            <hr className="border-gray-100" />
-
-            {/* 生活援助 */}
-            <div>
-              <h2 className="text-sm font-bold text-emerald-600 mb-3">生活援助</h2>
-              <div className="flex flex-col gap-4">
-                <Group title="清掃">
-                  <Chip label="居室"   active={form.cleanRoom}    onClick={() => toggle('cleanRoom')} />
-                  <Chip label="トイレ" active={form.cleanToilet}  onClick={() => toggle('cleanToilet')} />
-                  <Chip label="ベッド" active={form.cleanBed}     onClick={() => toggle('cleanBed')} />
-                  <Chip label="台所"   active={form.cleanKitchen} onClick={() => toggle('cleanKitchen')} />
-                  <Chip label="浴室"   active={form.cleanBath}    onClick={() => toggle('cleanBath')} />
-                  <Chip label="ゴミ出し" active={form.garbageOut} onClick={() => toggle('garbageOut')} />
-                </Group>
-                <Group title="家事">
-                  <Chip label="洗濯"      active={form.laundry}      onClick={() => toggle('laundry')} />
-                  <Chip label="調理"      active={form.cooking}      onClick={() => toggle('cooking')} />
-                  <Chip label="配膳・下膳" active={form.serving}     onClick={() => toggle('serving')} />
-                  <Chip label="配膳のみ"  active={form.servingOnly}  onClick={() => toggle('servingOnly')} />
-                  <Chip label="買い物"    active={form.shopping}     onClick={() => toggle('shopping')} />
-                </Group>
-              </div>
+          {/* ③ 生活援助 */}
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <SectionBar label="③ 生活援助" color="bg-emerald-600" />
+            <div className="flex flex-col gap-5">
+              <Group title="清掃（複数選べます）">
+                <Chip label="居室"    active={form.cleanRoom}    onClick={() => toggle('cleanRoom')} />
+                <Chip label="トイレ"  active={form.cleanToilet}  onClick={() => toggle('cleanToilet')} />
+                <Chip label="ベッド"  active={form.cleanBed}     onClick={() => toggle('cleanBed')} />
+                <Chip label="台所"    active={form.cleanKitchen} onClick={() => toggle('cleanKitchen')} />
+                <Chip label="浴室"    active={form.cleanBath}    onClick={() => toggle('cleanBath')} />
+                <Chip label="ゴミ出し" active={form.garbageOut}  onClick={() => toggle('garbageOut')} />
+              </Group>
+              <Group title="家事">
+                <Chip label="洗濯"       active={form.laundry}     onClick={() => toggle('laundry')} />
+                <Chip label="調理"       active={form.cooking}     onClick={() => toggle('cooking')} />
+                <Chip label="配膳・下膳" active={form.serving}     onClick={() => toggle('serving')} />
+                <Chip label="配膳のみ"   active={form.servingOnly} onClick={() => toggle('servingOnly')} />
+                <Chip label="買い物"     active={form.shopping}    onClick={() => toggle('shopping')} />
+              </Group>
             </div>
+          </div>
 
-            <hr className="border-gray-100" />
-
-            {/* 退室確認 */}
-            <div>
-              <h2 className="text-sm font-bold text-orange-500 mb-3">退室確認</h2>
-              <div className="flex flex-wrap gap-2">
-                <Chip label="火元"   active={form.fireCheck}     onClick={() => toggle('fireCheck')} />
-                <Chip label="電気"   active={form.electricCheck} onClick={() => toggle('electricCheck')} />
-                <Chip label="水道"   active={form.waterCheck}    onClick={() => toggle('waterCheck')} />
-                <Chip label="戸締り" active={form.lockCheck}     onClick={() => toggle('lockCheck')} />
-              </div>
+          {/* ④ 退室確認 */}
+          <div className="bg-white rounded-2xl shadow-sm p-5">
+            <SectionBar label="④ 退室確認" color="bg-orange-500" />
+            <div className="flex flex-wrap gap-2.5 mb-4">
+              <Chip label="火元"   active={form.fireCheck}     onClick={() => toggle('fireCheck')} />
+              <Chip label="電気"   active={form.electricCheck} onClick={() => toggle('electricCheck')} />
+              <Chip label="水道"   active={form.waterCheck}    onClick={() => toggle('waterCheck')} />
+              <Chip label="戸締り" active={form.lockCheck}     onClick={() => toggle('lockCheck')} />
             </div>
-
-            {/* 締め言葉 */}
             <textarea
               value={form.closingNote}
               onChange={e => setForm(prev => ({ ...prev, closingNote: e.target.value }))}
-              placeholder="締め・退室時の様子（例：「ありがとう」とお言葉をいただき退出）"
+              placeholder="退室時の様子・締め（例：「ありがとう」とお言葉をいただき退出）"
               rows={2}
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-blue-300 text-gray-700 placeholder-gray-300"
+              className="w-full text-base border-2 border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-blue-300 text-gray-700 placeholder-gray-300"
             />
+          </div>
 
-            {/* ボタン */}
-            <button onClick={handleCopy}
-              className="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-bold py-3 rounded-xl text-base transition-all duration-100">
+          {/* ⑤ ボタン */}
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleCopy}
+              className="w-full bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-gray-900 font-bold py-5 rounded-2xl text-xl transition-all duration-100 shadow-md"
+            >
               レポートをコピー
             </button>
-            <button onClick={() => { setForm(initial); setCopiedText(''); }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-medium py-2.5 rounded-xl text-sm transition-all duration-100">
-              リセット
+            <button
+              onClick={() => { setForm(initial); setCopiedText(''); }}
+              className="w-full bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-400 font-medium py-3 rounded-xl text-base transition-all duration-100"
+            >
+              リセット（全部クリア）
             </button>
-
-            {/* コピーした文章プレビュー */}
-            {copiedText && (
-              <div className="bg-green-50 border-2 border-green-300 rounded-xl p-3">
-                <p className="text-xs font-bold text-green-600 mb-1.5">✓ コピーした内容</p>
-                <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{copiedText}</p>
-              </div>
-            )}
           </div>
+
+          {/* コピーした文章プレビュー */}
+          {copiedText && (
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-2xl p-4">
+              <p className="text-sm font-bold text-blue-600 mb-2">コピーした内容</p>
+              <p className="text-base text-gray-800 whitespace-pre-line leading-relaxed">{copiedText}</p>
+            </div>
+          )}
         </div>
 
         {/* ── 右：スプシ用コード ── */}
         <div className="w-36 shrink-0">
           <div className="bg-white rounded-2xl shadow-sm p-3 sticky top-4">
-            <p className="text-xs font-bold text-gray-400 mb-2 tracking-wide">スプシ用コード</p>
+            <p className="text-xs font-bold text-gray-400 mb-2 tracking-wide text-center">スプシ用コード</p>
             <div className="flex flex-col gap-1.5">
               {SHEET_CODES.map(({ code, hint }) => (
                 <button key={code} onClick={() => handleCodeCopy(code)}
-                  className="text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg px-2 py-1.5 transition-all">
-                  <span className="block text-xs text-gray-400 leading-none mb-0.5">{hint}</span>
-                  <span className="font-mono text-xs font-semibold text-gray-700 break-all">{code}</span>
+                  className="text-left bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-100 rounded-lg px-2 py-1.5 transition-all">
+                  <span className="block text-xs text-blue-300 leading-none mb-0.5">{hint}</span>
+                  <span className="font-mono text-xs font-bold text-blue-700 break-all">{code}</span>
                 </button>
               ))}
             </div>
@@ -604,7 +629,7 @@ export default function DailyReportPage() {
       </div>
 
       {/* トースト */}
-      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-2xl text-base font-bold shadow-xl transition-all duration-300 whitespace-nowrap ${
+      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-4 rounded-2xl text-base font-bold shadow-xl transition-all duration-300 whitespace-nowrap ${
         toast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}>
         {toastMsg}
       </div>
