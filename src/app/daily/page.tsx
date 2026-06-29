@@ -475,9 +475,9 @@ export default function DailyReportPage() {
         </div>
         <Link
           href="/help"
-          className="bg-white border border-gray-200 text-gray-500 font-medium px-4 py-2 rounded-xl text-sm hover:bg-gray-50 transition-all"
+          className="bg-[#FFE2E2] border border-[#FFB0B0] text-gray-800 font-bold px-4 py-2.5 rounded-xl text-sm hover:bg-[#FFD0D0] transition-all"
         >
-          使い方
+          使い方ガイド
         </Link>
       </div>
 
