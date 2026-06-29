@@ -140,7 +140,6 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   const toConn = (s: string) =>
     s.replace(/しました$/, 'し').replace(/ました$/, '').replace(/済みです$/, '済ませ');
 
-  // ── 入室 ──
   if (f.aisatsu && f.healthManagement) {
     add(oneOf([
       '挨拶して入室し、体調をお変わりないかご確認しました',
@@ -157,7 +156,6 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
 
   if (f.userState.trim()) add(f.userState.trim());
 
-  // ── 身体介護 ──
   const body: string[] = [];
   const bd = (s: string) => body.push(s);
 
@@ -250,7 +248,6 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
     addC(body[0]);
   }
 
-  // ── 生活援助 ──
   type HK = { c: string; f: string };
   const hk: HK[] = [];
   const rooms: string[] = [];
@@ -270,7 +267,6 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   if (hk.length >= 2) addC([...hk.slice(0, -1).map(h => h.c), hk[hk.length - 1].f].join('、'));
   else if (hk.length === 1) addC(hk[0].f);
 
-  // ── 食事 ──
   if (f.cooking && f.serving && f.medicationCheck) {
     addC(oneOf([
       '調理・配膳し、食後に下膳と服薬確認を済ませました',
@@ -294,7 +290,6 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   if (f.servingOnly) addC(pick(map, '配膳のみ', '配膳をしました'));
   if (f.shopping)    addC(pick(map, '買物',     '日用品の買い物をしました'));
 
-  // ── 退室 ──
   const exitItems: string[] = [];
   if (f.fireCheck)     exitItems.push('火元');
   if (f.electricCheck) exitItems.push('電気');
@@ -323,8 +318,8 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
       onClick={onClick}
       className={`px-4 py-2.5 rounded-full text-base font-semibold transition-all duration-100 select-none border-2 ${
         active
-          ? 'bg-gray-900 text-white border-gray-900'
-          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500 active:bg-gray-50'
+          ? 'bg-[#FFE2E2] text-gray-900 border-[#FFB0B0]'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 active:bg-gray-50'
       }`}
     >
       {label}
@@ -341,8 +336,8 @@ function RadioChip({ label, value, current, onChange }: {
       onClick={() => onChange(active ? '' : value)}
       className={`px-4 py-2.5 rounded-full text-base font-semibold transition-all duration-100 select-none border-2 ${
         active
-          ? 'bg-gray-900 text-white border-gray-900'
-          : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500 active:bg-gray-50'
+          ? 'bg-[#FFE2E2] text-gray-900 border-[#FFB0B0]'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 active:bg-gray-50'
       }`}
     >
       {label}
@@ -361,8 +356,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-1 h-5 bg-gray-800 rounded-full" />
+    <div className="bg-[#FFE2E2] rounded-xl px-4 py-2.5 mb-4">
       <h2 className="text-base font-bold text-gray-800">{label}</h2>
     </div>
   );
@@ -384,12 +378,12 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#FFE2E2' }}>
-      <div className="bg-white rounded-3xl shadow-md p-10 w-full max-w-sm">
-        <div className="text-center mb-8">
+    <main className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-10 w-full max-w-sm">
+        <div className="bg-[#FFE2E2] rounded-2xl px-6 py-4 text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">日報入力</h1>
-          <p className="text-gray-400 mt-1 text-sm">パスワードを入力してください</p>
         </div>
+        <p className="text-gray-400 text-sm text-center mb-6">パスワードを入力してください</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="password"
@@ -397,7 +391,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             onChange={e => setPw(e.target.value)}
             placeholder="パスワード"
             autoFocus
-            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-gray-400 transition-colors text-center tracking-widest"
+            className="border-2 border-gray-200 rounded-xl px-4 py-3 text-xl focus:outline-none focus:border-[#FFB0B0] transition-colors text-center tracking-widest"
           />
           {error && (
             <p className="text-red-500 text-sm text-center">パスワードが違います</p>
@@ -472,14 +466,16 @@ export default function DailyReportPage() {
   if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
 
   return (
-    <main className="min-h-screen px-3 py-6" style={{ backgroundColor: '#FFE2E2' }}>
+    <main className="min-h-screen bg-white px-3 py-6">
 
       {/* ヘッダー */}
       <div className="flex items-center justify-between max-w-4xl mx-auto mb-5">
-        <h1 className="text-2xl font-bold text-gray-900">日報入力</h1>
+        <div className="bg-[#FFE2E2] rounded-xl px-5 py-2.5">
+          <h1 className="text-xl font-bold text-gray-900">日報入力</h1>
+        </div>
         <Link
           href="/help"
-          className="bg-white border border-gray-300 text-gray-600 font-medium px-4 py-2 rounded-xl text-sm hover:bg-gray-50 transition-all"
+          className="bg-white border border-gray-200 text-gray-500 font-medium px-4 py-2 rounded-xl text-sm hover:bg-gray-50 transition-all"
         >
           使い方
         </Link>
@@ -491,7 +487,7 @@ export default function DailyReportPage() {
         <div className="flex-1 min-w-0 flex flex-col gap-4">
 
           {/* ① 入室 */}
-          <div className="bg-white rounded-2xl shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <SectionLabel label="① 入室" />
             <div className="flex flex-wrap gap-2.5 mb-4">
               <Chip label="挨拶" active={form.aisatsu} onClick={() => toggle('aisatsu')} />
@@ -502,12 +498,12 @@ export default function DailyReportPage() {
               onChange={e => setForm(prev => ({ ...prev, userState: e.target.value }))}
               placeholder="ご本人の様子（例：「よく眠れた」と笑顔でお話しされる）"
               rows={2}
-              className="w-full text-base border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-gray-400 text-gray-700 placeholder-gray-300"
+              className="w-full text-base border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-[#FFB0B0] text-gray-700 placeholder-gray-300 transition-colors"
             />
           </div>
 
           {/* ② 身体介護 */}
-          <div className="bg-white rounded-2xl shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <SectionLabel label="② 身体介護" />
             <div className="flex flex-col gap-5">
               <Group title="排泄">
@@ -523,9 +519,9 @@ export default function DailyReportPage() {
                 <RadioChip label="シャワー浴" value="シャワー浴" current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
               </Group>
               <Group title="整容">
-                <Chip label="洗面"    active={form.facialCare}  onClick={() => toggle('facialCare')} />
-                <Chip label="口腔ケア" active={form.oralCare}   onClick={() => toggle('oralCare')} />
-                <Chip label="更衣介助" active={form.dressing}   onClick={() => toggle('dressing')} />
+                <Chip label="洗面"    active={form.facialCare} onClick={() => toggle('facialCare')} />
+                <Chip label="口腔ケア" active={form.oralCare}  onClick={() => toggle('oralCare')} />
+                <Chip label="更衣介助" active={form.dressing}  onClick={() => toggle('dressing')} />
               </Group>
               <Group title="移動・起床就寝">
                 <Chip label="移動介助" active={form.movementAssist} onClick={() => toggle('movementAssist')} />
@@ -540,7 +536,7 @@ export default function DailyReportPage() {
           </div>
 
           {/* ③ 生活援助 */}
-          <div className="bg-white rounded-2xl shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <SectionLabel label="③ 生活援助" />
             <div className="flex flex-col gap-5">
               <Group title="清掃">
@@ -562,7 +558,7 @@ export default function DailyReportPage() {
           </div>
 
           {/* ④ 退室確認 */}
-          <div className="bg-white rounded-2xl shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <SectionLabel label="④ 退室確認" />
             <div className="flex flex-wrap gap-2.5 mb-4">
               <Chip label="火元"   active={form.fireCheck}     onClick={() => toggle('fireCheck')} />
@@ -575,7 +571,7 @@ export default function DailyReportPage() {
               onChange={e => setForm(prev => ({ ...prev, closingNote: e.target.value }))}
               placeholder="退室時の様子・締め（例：「ありがとう」とお言葉をいただき退出）"
               rows={2}
-              className="w-full text-base border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-gray-400 text-gray-700 placeholder-gray-300"
+              className="w-full text-base border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:border-[#FFB0B0] text-gray-700 placeholder-gray-300 transition-colors"
             />
           </div>
 
@@ -597,8 +593,8 @@ export default function DailyReportPage() {
 
           {/* コピーした文章プレビュー */}
           {copiedText && (
-            <div className="bg-white border border-gray-200 rounded-2xl p-4">
-              <p className="text-xs font-bold text-gray-400 mb-2">コピーした内容</p>
+            <div className="bg-[#FFF5F5] border border-[#FFD0D0] rounded-2xl p-4">
+              <p className="text-xs font-bold text-[#FF9090] mb-2">コピーした内容</p>
               <p className="text-base text-gray-800 whitespace-pre-line leading-relaxed">{copiedText}</p>
             </div>
           )}
@@ -606,12 +602,12 @@ export default function DailyReportPage() {
 
         {/* ── 右：スプシ用コード ── */}
         <div className="w-36 shrink-0">
-          <div className="bg-white rounded-2xl shadow-sm p-3 sticky top-4">
-            <p className="text-xs font-bold text-gray-500 mb-2 text-center">スプシ用コード</p>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sticky top-4">
+            <p className="text-xs font-bold text-gray-400 mb-2 text-center">スプシ用コード</p>
             <div className="flex flex-col gap-1.5">
               {SHEET_CODES.map(({ code, hint }) => (
                 <button key={code} onClick={() => handleCodeCopy(code)}
-                  className="text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg px-2 py-1.5 transition-all">
+                  className="text-left bg-gray-50 hover:bg-[#FFF5F5] active:bg-[#FFE2E2] border border-gray-200 rounded-lg px-2 py-1.5 transition-all">
                   <span className="block text-xs text-gray-400 leading-none mb-0.5">{hint}</span>
                   <span className="font-mono text-xs font-bold text-gray-700 break-all">{code}</span>
                 </button>
