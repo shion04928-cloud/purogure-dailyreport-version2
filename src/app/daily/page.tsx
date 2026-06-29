@@ -593,9 +593,9 @@ export default function DailyReportPage() {
 
           {/* コピーした文章プレビュー */}
           {copiedText && (
-            <div className="bg-[#FFF5F5] border border-[#FFD0D0] rounded-2xl p-4">
-              <p className="text-xs font-bold text-[#FF9090] mb-2">コピーした内容</p>
-              <p className="text-base text-gray-800 whitespace-pre-line leading-relaxed">{copiedText}</p>
+            <div className="bg-white border-2 border-[#454040] rounded-2xl p-4">
+              <p className="text-xs font-bold text-[#454040] mb-2">コピーした内容</p>
+              <p className="text-base text-[#454040] whitespace-pre-line leading-relaxed">{copiedText}</p>
             </div>
           )}
         </div>
