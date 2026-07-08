@@ -123,124 +123,58 @@ function oneOf(opts: string[]): string {
 
 function generateReport(f: FormState, map: Map<string, string[]>): string {
   const segs: string[] = [];
-  const done = new Set<string>();
-  const use = (...keys: string[]) => keys.forEach(k => done.add(k));
-  const avail = (k: string) => !done.has(k);
   let prefix = '';
   let firstCare = true;
+  let aisatsuRaw = '';
 
-  const add = (text: string) => { segs.push(prefix + text); prefix = ''; };
+  const toConn = (s: string) =>
+    s.replace(/しました$/, 'し').replace(/ました$/, '').replace(/済みです$/, '済ませ');
+
+  const p = (key: string) => pick(map, key, '');
+
+  const add = (text: string) => {
+    if (!text.trim()) return;
+    segs.push(prefix + text);
+    prefix = '';
+  };
 
   const addC = (text: string) => {
+    if (!text.trim()) return;
     const conn = (firstCare && segs.length > 0) ? oneOf(['その後、', '続いて、']) : '';
     firstCare = false;
     add(conn + text);
   };
 
-  const toConn = (s: string) =>
-    s.replace(/しました$/, 'し').replace(/ました$/, '').replace(/済みです$/, '済ませ');
+  // ── 入室 ──
+  aisatsuRaw = f.aisatsu ? p('挨拶') : '';
+  const healthText = f.healthManagement ? p('健康管理') : '';
 
-  if (f.aisatsu && f.healthManagement) {
-    add(oneOf([
-      '挨拶して入室し、体調をお変わりないかご確認しました',
-      'チャイムを鳴らし挨拶して入室し、ご気分をお聞きしました',
-    ]));
-    use('aisatsu', 'healthManagement');
-  } else if (f.aisatsu) {
-    prefix = oneOf(['挨拶して入室し、', 'チャイムを鳴らし挨拶して入室し、']);
-    use('aisatsu');
-  } else if (f.healthManagement) {
-    add(pick(map, '健康管理', '体調をお変わりないかご確認しました'));
-    use('healthManagement');
+  if (aisatsuRaw && healthText) {
+    add(toConn(aisatsuRaw) + '、' + healthText);
+  } else if (aisatsuRaw) {
+    prefix = toConn(aisatsuRaw) + '、';
+  } else if (healthText) {
+    add(healthText);
   }
 
   if (f.userState.trim()) add(f.userState.trim());
 
+  // ── 身体介護（全て収集して1文にまとめる）──
   const body: string[] = [];
-  const bd = (s: string) => body.push(s);
+  const bd = (key: string) => { const t = p(key); if (t) body.push(t); };
 
-  if (f.wakeAssist) {
-    const wF = f.facialCare, wO = f.oralCare, wD = f.dressing;
-    if (wF && wO && wD) {
-      bd(oneOf(['声掛けして起床を介助し、洗面・口腔ケアを済ませ、更衣のお手伝いをしました', '起床のお手伝いをし、洗面・口腔ケア・更衣のお手伝いをしました']));
-      use('wakeAssist', 'facialCare', 'oralCare', 'dressing');
-    } else if (wF && wO) {
-      bd(oneOf(['声掛けして起床を介助し、洗面・口腔ケアをしました', '起床のお手伝いをし、洗面・口腔ケアをしました']));
-      use('wakeAssist', 'facialCare', 'oralCare');
-    } else if (wD) {
-      bd('起床のお手伝いをし、更衣をしました'); use('wakeAssist', 'dressing');
-    } else {
-      bd(pick(map, '起床介助', '起床のお手伝いをしました')); use('wakeAssist');
-    }
-  }
-
-  if (f.toiletGuide || f.toiletAssist) {
-    const withMove = f.movementAssist && avail('movementAssist');
-    if (withMove && f.toiletGuide && f.toiletAssist) {
-      bd(oneOf(['トイレへお誘いして移動を介助し、排泄介助をしました', 'トイレへの移動を介助し、排泄介助をしました']));
-      use('movementAssist', 'toiletGuide', 'toiletAssist');
-    } else if (withMove && f.toiletAssist) {
-      bd('トイレへの移動を介助し、排泄介助をしました'); use('movementAssist', 'toiletAssist');
-    } else if (f.toiletGuide && f.toiletAssist) {
-      bd(oneOf(['トイレへお誘いし、排泄介助をしました', 'トイレ誘導・介助をしました'])); use('toiletGuide', 'toiletAssist');
-    } else {
-      if (f.toiletGuide)  { bd(pick(map, 'トイレ誘導', 'トイレへお誘いしました')); }
-      if (f.toiletAssist) { bd(pick(map, 'トイレ介助', 'トイレ介助をしました')); }
-    }
-  }
-
-  if (f.senshoku) {
-    if (f.dressing && avail('dressing')) {
-      bd(oneOf([`${f.senshoku}をし、更衣のお手伝いをしました`, `${f.senshoku}後に更衣をしました`])); use('senshoku', 'dressing');
-    } else {
-      bd(pick(map, f.senshoku, `${f.senshoku}をしました`)); use('senshoku');
-    }
-  }
-
-  if (f.zenshinyoku) {
-    const withMove = f.movementAssist && avail('movementAssist');
-    const canHair  = f.hairWash && avail('hairWash');
-    const canDress = f.dressing && avail('dressing');
-    const b = f.zenshinyoku;
-    if (withMove && canHair && canDress) {
-      bd(oneOf([`浴室へ誘導して${b}・洗髪を実施し、更衣のお手伝いをしました`, `浴室への移動を介助し、${b}・洗髪を実施し、入浴後に更衣をしました`]));
-      use('movementAssist', 'zenshinyoku', 'hairWash', 'dressing');
-    } else if (withMove && canDress) {
-      bd(oneOf([`浴室へ誘導して${b}を実施し、入浴後に更衣のお手伝いをしました`, `浴室への移動を介助し、${b}実施後に更衣をしました`]));
-      use('movementAssist', 'zenshinyoku', 'dressing');
-    } else if (withMove && canHair) {
-      bd(oneOf([`浴室へ誘導して${b}・洗髪を実施しました`, `浴室への移動を介助し、洗髪しながら${b}を実施しました`]));
-      use('movementAssist', 'zenshinyoku', 'hairWash');
-    } else if (withMove) {
-      bd(oneOf([`浴室へ誘導して${b}を実施しました`, `浴室への移動を介助し、${b}を実施しました`])); use('movementAssist', 'zenshinyoku');
-    } else if (canHair && canDress) {
-      bd(oneOf([`${b}・洗髪をし、入浴後に更衣のお手伝いをしました`, `${b}の介助をし、洗髪・更衣を済ませました`])); use('zenshinyoku', 'hairWash', 'dressing');
-    } else if (canDress) {
-      bd(oneOf([`${b}をし、入浴後に更衣のお手伝いをしました`, `${b}後に更衣のお手伝いをしました`])); use('zenshinyoku', 'dressing');
-    } else if (canHair) {
-      bd(oneOf([`${b}・洗髪をしました`, `洗髪しながら${b}を実施しました`])); use('zenshinyoku', 'hairWash');
-    } else {
-      bd(pick(map, b, `${b}に入っていただきました`)); use('zenshinyoku');
-    }
-  }
-
-  if (f.hairWash && avail('hairWash')) bd(pick(map, '洗髪', '洗髪をしました'));
-
-  const hasFacial = f.facialCare && avail('facialCare');
-  const hasOral   = f.oralCare   && avail('oralCare');
-  const hasDress  = f.dressing   && avail('dressing');
-  if (hasFacial && hasOral && hasDress) {
-    bd(oneOf(['洗面・口腔ケアをし、更衣のお手伝いをしました', '洗面・口腔ケア・更衣のお手伝いをしました'])); use('facialCare', 'oralCare', 'dressing');
-  } else if (hasFacial && hasOral) {
-    bd(oneOf(['洗面・口腔ケアをしました', '洗面のお手伝いをし、口腔ケアをしました'])); use('facialCare', 'oralCare');
-  } else {
-    if (hasFacial) { bd(pick(map, '洗面',     '洗面のお手伝いをしました')); use('facialCare'); }
-    if (hasOral)   { bd(pick(map, '口腔ケア', '口腔ケアをしました'));       use('oralCare'); }
-  }
-  if (f.dressing && avail('dressing')) { bd(pick(map, '更衣介助', '更衣のお手伝いをしました')); use('dressing'); }
-  if (f.movementAssist && avail('movementAssist')) bd(pick(map, '移動介助', '移動介助をしました'));
-  if (f.sleepAssist) bd(pick(map, '就寝介助', '就寝のお手伝いをしました'));
-  if (f.safeguard)   bd(pick(map, '安全確保', '室内の安全確認をしました'));
+  if (f.wakeAssist)     bd('起床介助');
+  if (f.toiletGuide)    bd('トイレ誘導');
+  if (f.toiletAssist)   bd('トイレ介助');
+  if (f.senshoku)       bd(f.senshoku);
+  if (f.zenshinyoku)    bd(f.zenshinyoku);
+  if (f.hairWash)       bd('洗髪');
+  if (f.facialCare)     bd('洗面');
+  if (f.oralCare)       bd('口腔ケア');
+  if (f.dressing)       bd('更衣介助');
+  if (f.movementAssist) bd('移動介助');
+  if (f.sleepAssist)    bd('就寝介助');
+  if (f.safeguard)      bd('安全確保');
 
   if (body.length >= 2) {
     addC([...body.slice(0, -1).map(toConn), body[body.length - 1]].join('、'));
@@ -248,6 +182,7 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
     addC(body[0]);
   }
 
+  // ── 生活援助 ──
   type HK = { c: string; f: string };
   const hk: HK[] = [];
   const rooms: string[] = [];
@@ -256,55 +191,66 @@ function generateReport(f: FormState, map: Map<string, string[]>): string {
   if (f.cleanBed)     rooms.push('ベッド周り');
   if (f.cleanKitchen) rooms.push('台所');
   if (f.cleanBath)    rooms.push('浴室');
-  if (rooms.length >= 2) hk.push({ c: `${rooms.join('・')}を清掃し`, f: `${rooms.join('・')}を清掃しました` });
-  else if (f.cleanRoom)    hk.push({ c: '居室を清掃し',     f: pick(map, '清掃_居室',   '居室を清掃しました') });
-  else if (f.cleanToilet)  hk.push({ c: 'トイレを清掃し',   f: pick(map, '清掃_トイレ', 'トイレを清掃しました') });
-  else if (f.cleanBed)     hk.push({ c: 'ベッド周りを整え', f: pick(map, '清掃_ベッド', 'ベッド周りを整えました') });
-  else if (f.cleanKitchen) hk.push({ c: '台所を清掃し',     f: pick(map, '清掃_台所',   '台所を清掃しました') });
-  else if (f.cleanBath)    hk.push({ c: '浴室を清掃し',     f: pick(map, '清掃_浴室',   '浴室を清掃しました') });
-  if (f.garbageOut) hk.push({ c: 'ゴミ出しをし', f: pick(map, 'ゴミ出し', 'ゴミ出しをしました') });
-  if (f.laundry)    hk.push({ c: '洗濯をし',     f: pick(map, '洗濯',     '洗濯をしました') });
-  if (hk.length >= 2) addC([...hk.slice(0, -1).map(h => h.c), hk[hk.length - 1].f].join('、'));
-  else if (hk.length === 1) addC(hk[0].f);
 
-  if (f.cooking && f.serving && f.medicationCheck) {
-    addC(oneOf([
-      '調理・配膳し、食後に下膳と服薬確認を済ませました',
-      '献立をご相談して調理・配膳しました。食後に下膳をし、服薬確認済みです',
-    ]));
-    use('cooking', 'serving', 'medicationCheck');
-  } else if (f.cooking && f.serving) {
-    addC(oneOf([
-      '調理・配膳し、食後に下膳をしました',
-      '献立をご相談して調理・配膳し、食後に下膳と片付けをしました',
-    ]));
-    use('cooking', 'serving');
-  } else if (f.serving && f.medicationCheck) {
-    addC(oneOf(['配膳し、食後に下膳をし服薬確認済みです', '配膳・下膳をし、服薬確認済みです']));
-    use('serving', 'medicationCheck');
+  if (rooms.length >= 2) {
+    hk.push({ c: `${rooms.join('・')}を清掃し`, f: `${rooms.join('・')}を清掃しました` });
   } else {
-    if (f.cooking) addC(pick(map, '調理',   '調理をしました'));
-    if (f.serving) addC(pick(map, '配下膳', '配膳・下膳をしました'));
+    const cleanMap: [boolean, string][] = [
+      [f.cleanRoom,    '清掃_居室'],
+      [f.cleanToilet,  '清掃_トイレ'],
+      [f.cleanBed,     '清掃_ベッド'],
+      [f.cleanKitchen, '清掃_台所'],
+      [f.cleanBath,    '清掃_浴室'],
+    ];
+    for (const [flag, key] of cleanMap) {
+      if (flag) { const t = p(key); if (t) hk.push({ c: toConn(t), f: t }); }
+    }
+  }
+  if (f.garbageOut) { const t = p('ゴミ出し'); if (t) hk.push({ c: toConn(t), f: t }); }
+  if (f.laundry)    { const t = p('洗濯');     if (t) hk.push({ c: toConn(t), f: t }); }
+
+  if (hk.length >= 2) {
+    addC([...hk.slice(0, -1).map(h => h.c), hk[hk.length - 1].f].join('、'));
+  } else if (hk.length === 1) {
+    addC(hk[0].f);
   }
 
-  if (f.servingOnly) addC(pick(map, '配膳のみ', '配膳をしました'));
-  if (f.shopping)    addC(pick(map, '買物',     '日用品の買い物をしました'));
+  // ── 食事・服薬 ──
+  const cookT = f.cooking        ? p('調理')    : '';
+  const servT = f.serving        ? p('配下膳')  : '';
+  const medT  = f.medicationCheck ? p('服薬確認') : '';
 
+  if (cookT && servT && medT) {
+    addC(toConn(cookT) + '、' + toConn(servT) + '、' + medT);
+  } else if (cookT && servT) {
+    addC(toConn(cookT) + '、' + servT);
+  } else if (servT && medT) {
+    addC(toConn(servT) + '、' + medT);
+  } else {
+    if (cookT) addC(cookT);
+    if (servT) addC(servT);
+    if (medT)  addC(medT);
+  }
+
+  if (f.servingOnly) { const t = p('配膳のみ'); if (t) addC(t); }
+  if (f.shopping)    { const t = p('買物');     if (t) addC(t); }
+
+  // ── 退室確認 ──
   const exitItems: string[] = [];
   if (f.fireCheck)     exitItems.push('火元');
   if (f.electricCheck) exitItems.push('電気');
   if (f.waterCheck)    exitItems.push('水道');
   if (f.lockCheck)     exitItems.push('戸締り');
-  const med = f.medicationCheck && avail('medicationCheck');
-  if (med && exitItems.length > 0) {
-    add(`服薬を確認し、${exitItems.join('・')}を確認して退室しました`);
-  } else if (exitItems.length > 0) {
+  if (exitItems.length > 0) {
     add(`${exitItems.join('・')}を確認して退室しました`);
-  } else if (med) {
-    add('服薬確認済みです');
   }
 
-  if (prefix) segs.push('挨拶して入室しました');
+  // prefixが残っている＝挨拶のみ選んで他に何も選ばなかった場合
+  if (prefix && aisatsuRaw) {
+    segs.push(aisatsuRaw);
+    prefix = '';
+  }
+
   if (f.closingNote.trim()) segs.push(f.closingNote.trim());
 
   return segs.length > 0 ? segs.join('。') + '。' : '';
