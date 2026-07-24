@@ -322,11 +322,14 @@ export default function HelpPage() {
             <div className="flex gap-4">
               <StepBadge n={4} />
               <div className="flex-1">
-                <p className="font-bold text-gray-800 text-base mb-1">保存すると自動的に反映される</p>
-                <p className="text-sm text-gray-500">入力が終わったら保存するだけです。次にアプリを開くと、新しいテンプレが使われます。</p>
-                <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <p className="text-sm text-gray-700 font-bold">反映されないときは</p>
-                  <p className="text-sm text-gray-500 mt-1">アプリのページを再読み込みしてください（ブラウザの更新ボタンを押す）</p>
+                <p className="font-bold text-gray-800 text-base mb-1">保存後、アプリを立て直す</p>
+                <p className="text-sm text-gray-500 mb-3">スプレッドシートを保存したら、アプリのページを更新してください。アプリはページを開いたときにスプレッドシートを読み込むため、<span className="font-bold text-gray-700">更新しないと新しい内容が反映されません。</span></p>
+                <div className="mt-1 bg-[#FFF5F5] border border-[#FFD0D0] rounded-xl p-4">
+                  <p className="text-sm font-bold text-[#454040] mb-2">アプリの立て直し方</p>
+                  <ul className="text-sm text-[#454040] flex flex-col gap-1.5">
+                    <li>・スマホ・タブレット → ブラウザを閉じて、もう一度開く</li>
+                    <li>・パソコン → キーボードの <span className="font-bold">Ctrl + R</span>（または F5）を押す</li>
+                  </ul>
                 </div>
               </div>
             </div>
