@@ -82,7 +82,7 @@ const SHEET_CODES: { code: string; hint: string }[] = [
   { code: '全身清拭',     hint: '清拭→全身' },
   { code: '部分清拭',     hint: '清拭→部分' },
   { code: '洗髪',         hint: '洗髪' },
-  { code: '一般浴',       hint: '全身浴→一般' },
+  { code: '入浴',          hint: '入浴' },
   { code: 'シャワー浴',   hint: '全身浴→シャワー' },
   { code: '機械浴',       hint: '全身浴→機械' },
   { code: '洗面',         hint: '洗面' },
@@ -461,7 +461,7 @@ export default function DailyReportPage() {
                 <RadioChip label="部分清拭" value="部分清拭" current={form.senshoku} onChange={v => setStr('senshoku', v)} />
               </Group>
               <Group title="入浴">
-                <RadioChip label="一般浴"    value="一般浴"    current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
+                <RadioChip label="入浴"      value="入浴"      current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
                 <RadioChip label="シャワー浴" value="シャワー浴" current={form.zenshinyoku} onChange={v => setStr('zenshinyoku', v)} />
               </Group>
               <Group title="整容">
